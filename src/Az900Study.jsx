@@ -44,9 +44,21 @@ function getInitialStudyData() {
       && hoursPerDay >= 0.5
       && hoursPerDay <= 8
       && weakTopicIds.length > 0
-    const plan = hasValidPlan
-      ? { examDate: candidatePlan.examDate, hoursPerDay, weakTopicIds }
-      : null
+    let plan = null
+    if (hasValidPlan) {
+      const planDetails = { examDate: candidatePlan.examDate, hoursPerDay, weakTopicIds }
+      const savedSessions = Array.isArray(candidatePlan.sessions)
+        ? candidatePlan.sessions.filter((session) => (
+          typeof session?.id === 'string'
+          && typeof session.date === 'string'
+          && typeof session.title === 'string'
+          && Number.isFinite(session.durationMinutes)
+          && session.durationMinutes > 0
+          && typeof session.completed === 'boolean'
+        ))
+        : createStudySessions(planDetails)
+      plan = { ...planDetails, sessions: savedSessions }
+    }
 
     return { scores, plan, message: emptyData.message }
   } catch {
@@ -94,6 +106,28 @@ function getDailyPlan(plan) {
   return schedule
 }
 
+function createStudySessions(plan) {
+  return getDailyPlan(plan).flatMap((day) => {
+    const date = getLocalDateValue(day.date)
+    return [
+      {
+        id: `${date}-review`,
+        date,
+        title: `Review: ${day.focus}`,
+        durationMinutes: day.reviewMinutes,
+        completed: false,
+      },
+      {
+        id: `${date}-practice`,
+        date,
+        title: 'Practice questions and flashcards',
+        durationMinutes: day.practiceMinutes,
+        completed: false,
+      },
+    ]
+  })
+}
+
 function StudyTools({ activeTab }) {
   const [initialData] = useState(getInitialStudyData)
   const [scores, setScores] = useState(initialData.scores)
@@ -138,8 +172,17 @@ function StudyTools({ activeTab }) {
     ? az900Flashcards.filter((card) => difficultCardIds.includes(card.id))
     : az900Flashcards
   const flashcard = filteredCards[cardIndex]
-  const schedule = getDailyPlan(savedPlan)
   const today = getLocalDateValue()
+  const plannedSessions = savedPlan?.sessions ?? []
+  const completedSessionCount = plannedSessions.filter((session) => session.completed).length
+  const sessionProgress = plannedSessions.length
+    ? Math.round((completedSessionCount / plannedSessions.length) * 100)
+    : 0
+
+  function updateSavedPlan(nextPlan) {
+    setSavedPlan(nextPlan)
+    saveStudyData(scores, nextPlan)
+  }
 
   function beginQuiz() {
     setQuestionIndex(0)
@@ -200,13 +243,24 @@ function StudyTools({ activeTab }) {
     event.preventDefault()
     if (!plannerDraft.weakTopicIds.length) return
 
-    const plan = {
+    const planDetails = {
       ...plannerDraft,
       hoursPerDay: Number(plannerDraft.hoursPerDay),
     }
+    const plan = { ...planDetails, sessions: createStudySessions(planDetails) }
     setSavedPlan(plan)
     setPlannerDraft(plan)
     saveStudyData(scores, plan)
+  }
+
+  function toggleSessionComplete(sessionId) {
+    if (!savedPlan) return
+    const sessions = plannedSessions.map((session) => (
+      session.id === sessionId
+        ? { ...session, completed: !session.completed }
+        : session
+    ))
+    updateSavedPlan({ ...savedPlan, sessions })
   }
 
   function toggleWeakTopic(topicId) {
@@ -484,27 +538,47 @@ function StudyTools({ activeTab }) {
           <button className="study-primary-button" type="submit" disabled={!plannerDraft.weakTopicIds.length}>Generate my schedule</button>
         </form>
 
-        {savedPlan && schedule.length > 0 && (
+        {savedPlan && (
           <div className="planner-results">
             <div className="planner-results-heading">
               <div><p className="eyebrow">YOUR NEXT 7 DAYS</p><h3>Daily study schedule</h3></div>
-              <span>{plannerDraft.hoursPerDay} hour{Number(plannerDraft.hoursPerDay) === 1 ? '' : 's'} per day</span>
+              <span>{completedSessionCount} of {plannedSessions.length} sessions complete</span>
             </div>
             <p className="helper-copy">Your plan runs through {new Date(`${savedPlan.examDate}T12:00:00`).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })}. This preview shows up to the next seven days.</p>
-            <div className="daily-schedule">
-              {schedule.map((day) => (
-                <article className="tool-card schedule-day" key={getLocalDateValue(day.date)}>
-                  <div className="schedule-date">
-                    <strong>{day.date.toLocaleDateString('en', { weekday: 'short' })}</strong>
-                    <span>{day.date.toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
-                  </div>
-                  <div className="schedule-tasks">
-                    <p><span className="schedule-dot" />Review: {day.focus} <strong>{day.reviewMinutes} min</strong></p>
-                    <p><span className="schedule-dot practice-dot" />Practice questions and flashcards <strong>{day.practiceMinutes} min</strong></p>
-                  </div>
-                </article>
-              ))}
+            <div
+              className="session-progress-track"
+              role="progressbar"
+              aria-label="Study sessions completed"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={sessionProgress}
+            >
+              <span style={{ width: `${sessionProgress}%` }} />
             </div>
+            {plannedSessions.length ? (
+              <div className="daily-schedule">
+                {[...plannedSessions]
+                  .sort((first, second) => first.date.localeCompare(second.date))
+                  .map((session) => (
+                    <article className={`tool-card study-session${session.completed ? ' session-completed' : ''}`} key={session.id}>
+                      <label className="session-complete">
+                        <input
+                          type="checkbox"
+                          checked={session.completed}
+                          onChange={() => toggleSessionComplete(session.id)}
+                          aria-label={`Mark ${session.title} as ${session.completed ? 'incomplete' : 'complete'}`}
+                        />
+                      </label>
+                      <div className="session-details">
+                        <strong>{session.title}</strong>
+                        <span>{new Date(`${session.date}T12:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })} · {session.durationMinutes} min</span>
+                      </div>
+                    </article>
+                  ))}
+              </div>
+            ) : (
+              <p className="session-empty-state">There are no study sessions in this schedule. Generate a new schedule to create sessions.</p>
+            )}
           </div>
         )}
         <p className="storage-message" role="status">{storageMessage}</p>
