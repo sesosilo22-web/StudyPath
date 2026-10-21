@@ -823,6 +823,334 @@
   }
 }
 
+.study-tool-quiz .quiz-start-card,
+.study-tool-quiz .quiz-question-card,
+.study-tool-quiz .quiz-results-card {
+  border-top: 3px solid var(--color-violet);
+  background: linear-gradient(150deg, #fff 65%, #f6f3ff);
+}
+
+.study-tool-readiness .readiness-summary {
+  border-top: 3px solid var(--color-teal);
+}
+
+.study-tool-readiness .readiness-topic {
+  border-left: 3px solid #7c5cfc;
+  background: linear-gradient(105deg, #fff 73%, #f7f5ff);
+}
+
+.study-tool-planner .planner-form {
+  border-top: 3px solid var(--color-orange);
+  background: linear-gradient(150deg, #fff 67%, #fff8ef);
+}
+
+.flashcard-controls {
+  align-items: center;
+}
+
+.flashcard-progress {
+  display: grid;
+  min-width: min(220px, 45%);
+  gap: 7px;
+  color: #334e66;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.flashcard-progress-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e5ebf2;
+}
+
+.flashcard-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-teal), #69d5c7);
+  transition: width 260ms ease;
+}
+
+.flashcard {
+  --flashcard-accent: #087e75;
+  --flashcard-deep: #075c58;
+  --flashcard-soft: #e8f8f5;
+  --flashcard-border: #bce9e2;
+
+  display: flex;
+  min-height: 0;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--flashcard-border);
+  border-top: 4px solid var(--flashcard-accent);
+  border-radius: 19px;
+  background:
+    radial-gradient(circle at 90% 0%, var(--flashcard-soft), transparent 18rem),
+    #fff;
+  box-shadow: 0 18px 38px rgba(20, 39, 70, 0.1);
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.flashcard-accent-1 {
+  --flashcard-accent: #2563a9;
+  --flashcard-deep: #1d4e83;
+  --flashcard-soft: #eaf3ff;
+  --flashcard-border: #c6dcf6;
+}
+
+.flashcard-accent-2 {
+  --flashcard-accent: #6746c3;
+  --flashcard-deep: #4d329c;
+  --flashcard-soft: #f0ebff;
+  --flashcard-border: #d8cbff;
+}
+
+.flashcard-accent-3 {
+  --flashcard-accent: #bd554c;
+  --flashcard-deep: #963e38;
+  --flashcard-soft: #fff0ec;
+  --flashcard-border: #f1c9c1;
+}
+
+.flashcard-accent-4 {
+  --flashcard-accent: #ae6316;
+  --flashcard-deep: #85490f;
+  --flashcard-soft: #fff4e6;
+  --flashcard-border: #f0d4ae;
+}
+
+.flashcard-accent-5 {
+  --flashcard-accent: #277b57;
+  --flashcard-deep: #1e6245;
+  --flashcard-soft: #eaf7ef;
+  --flashcard-border: #c5e4d0;
+}
+
+.flashcard-flip-button {
+  display: block;
+  width: 100%;
+  height: clamp(235px, 29vw, 315px);
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  perspective: 1200px;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flashcard-flip-button:focus-visible {
+  outline: 3px solid var(--flashcard-accent);
+  outline-offset: 5px;
+}
+
+.flashcard-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transition: transform 620ms cubic-bezier(0.2, 0.72, 0.25, 1);
+}
+
+.flashcard-revealed .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: clamp(18px, 4vw, 36px);
+  border: 1px solid var(--flashcard-border);
+  border-radius: inherit;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flashcard-front {
+  background:
+    radial-gradient(circle at 90% 5%, rgba(255, 255, 255, 0.98), transparent 45%),
+    linear-gradient(140deg, var(--flashcard-soft), #fff 78%);
+  color: #1e2e49;
+}
+
+.flashcard-front::before,
+.flashcard-back::before {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  width: 42px;
+  height: 4px;
+  border-radius: 0 0 5px 5px;
+  background: var(--flashcard-accent);
+  content: '';
+}
+
+.flashcard-back {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.18), transparent 15rem),
+    linear-gradient(145deg, var(--flashcard-accent), var(--flashcard-deep));
+  color: #fff;
+  transform: rotateY(180deg);
+}
+
+.flashcard-back::before {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.flashcard-face .flashcard-label {
+  color: var(--flashcard-accent);
+  font-size: 10px;
+  letter-spacing: 1.35px;
+}
+
+.flashcard-back .flashcard-label {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.flashcard-term {
+  display: block;
+  max-width: 620px;
+  color: inherit;
+  font-size: clamp(19px, 2.7vw, 28px);
+  font-weight: 750;
+  letter-spacing: -0.65px;
+  line-height: 1.35;
+}
+
+.flashcard-definition,
+.flashcard-example {
+  display: block;
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: clamp(12px, 1.3vw, 15px);
+  line-height: 1.6;
+}
+
+.flashcard-example {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(11px, 1.15vw, 13px);
+}
+
+.flashcard-example strong {
+  color: #fff;
+}
+
+.flashcard-tap-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: var(--flashcard-accent);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.flashcard-back .flashcard-tap-hint {
+  color: #fff;
+}
+
+.flashcard-tap-hint > span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.flashcard-actions {
+  align-items: center;
+  padding-top: 4px;
+}
+
+.flashcard .study-secondary-button {
+  border-color: var(--flashcard-border);
+  color: var(--flashcard-accent);
+}
+
+.flashcard .study-secondary-button:hover {
+  background: var(--flashcard-soft);
+}
+
+.flashcard .study-primary-button {
+  border-color: var(--flashcard-accent);
+  background: var(--flashcard-accent);
+  color: #fff;
+}
+
+.flashcard .study-primary-button:hover:not(:disabled) {
+  border-color: var(--flashcard-deep);
+  background: var(--flashcard-deep);
+}
+
+.no-cards-message {
+  border-top: 4px solid var(--color-violet);
+  background: linear-gradient(145deg, #fff, #f6f3ff);
+}
+
+@media (max-width: 760px) {
+  .flashcard-flip-button {
+    height: clamp(255px, 48vw, 330px);
+  }
+
+  .flashcard-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .flashcard-progress {
+    width: 100%;
+    max-width: 270px;
+  }
+}
+
+@media (max-width: 480px) {
+  .flashcard {
+    gap: 12px;
+    padding: 10px;
+    border-radius: 15px;
+  }
+
+  .flashcard-flip-button {
+    height: 300px;
+  }
+
+  .flashcard-face {
+    gap: 11px;
+    padding: 16px;
+  }
+
+  .flashcard-term {
+    font-size: 21px;
+  }
+
+  .flashcard-definition {
+    font-size: 12px;
+  }
+
+  .flashcard-example {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashcard-inner,
+  .flashcard,
+  .flashcard-progress-track > span {
+    transition: none;
+  }
+}
+
 /* Shared visual treatment for study tools */
 .study-tabs {
   gap: 7px;

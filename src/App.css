@@ -2200,3 +2200,52 @@
     transform: none;
   }
 }
+
+/* A little extra colour on the existing dashboard cards. */
+.goal-card,
+.subject-card,
+.sessions-panel,
+.assessment-panel {
+  box-shadow: 0 10px 26px rgba(20, 39, 70, 0.065);
+}
+
+.subject-card {
+  overflow: hidden;
+  border-top: 3px solid #14b8a6;
+  background: linear-gradient(155deg, #fff 58%, #f0fbf9);
+}
+
+.subject-card:nth-child(2) {
+  border-top-color: #ff9f43;
+  background: linear-gradient(155deg, #fff 58%, #fff7ee);
+}
+
+.subject-card:nth-child(3) {
+  border-top-color: #7c5cfc;
+  background: linear-gradient(155deg, #fff 58%, #f6f3ff);
+}
+
+.subject-card:nth-child(4) {
+  border-top-color: #43ad84;
+  background: linear-gradient(155deg, #fff 58%, #eff9f4);
+}
+
+.sessions-panel {
+  border-top: 3px solid #14b8a6;
+  background: linear-gradient(150deg, #fff 72%, #f1fbf9);
+}
+
+.assessment-panel {
+  border-top: 3px solid #ff9f43;
+  background: linear-gradient(150deg, #fff 72%, #fff8f0);
+}
+
+.session-marker {
+  background: #14b8a6;
+  box-shadow: 0 0 0 3px #e3f7f4;
+}
+
+.session-marker.purple {
+  background: #7c5cfc;
+  box-shadow: 0 0 0 3px #f0ecff;
+}

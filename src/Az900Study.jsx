@@ -240,7 +240,7 @@ function StudyTools({ activeTab }) {
 
   if (activeTab === 'quiz') {
     return (
-      <section className="study-tool-panel" aria-labelledby="quiz-title">
+      <section className="study-tool-panel study-tool-quiz" aria-labelledby="quiz-title">
         <div className="tool-heading">
           <div>
             <p className="eyebrow">PRACTISE & LEARN</p>
@@ -359,7 +359,7 @@ function StudyTools({ activeTab }) {
     })
 
     return (
-      <section className="study-tool-panel" aria-labelledby="readiness-title">
+      <section className="study-tool-panel study-tool-readiness" aria-labelledby="readiness-title">
         <div className="tool-heading">
           <div>
             <p className="eyebrow">YOUR PRACTICE HISTORY</p>
@@ -427,7 +427,7 @@ function StudyTools({ activeTab }) {
 
   if (activeTab === 'planner') {
     return (
-      <section className="study-tool-panel" aria-labelledby="planner-title">
+      <section className="study-tool-panel study-tool-planner" aria-labelledby="planner-title">
         <div className="tool-heading">
           <div>
             <p className="eyebrow">MAKE A REALISTIC ROUTINE</p>
@@ -514,16 +514,30 @@ function StudyTools({ activeTab }) {
 
   if (activeTab === 'flashcards') {
     return (
-      <section className="study-tool-panel" aria-labelledby="flashcards-title">
+      <section className="study-tool-panel study-tool-flashcards" aria-labelledby="flashcards-title">
         <div className="tool-heading">
           <div>
             <p className="eyebrow">RECALL & REVIEW</p>
             <h2 id="flashcards-title">Azure revision flashcards</h2>
-            <p>Try recalling the meaning before revealing the answer.</p>
+            <p>Tap a card or press Enter or Space to turn it over and reveal the answer.</p>
           </div>
         </div>
         <div className="flashcard-controls">
-          <span>{filteredCards.length ? `Card ${cardIndex + 1} of ${filteredCards.length}` : 'No difficult cards marked yet'}</span>
+          <div className="flashcard-progress">
+            <span>{filteredCards.length ? `Card ${cardIndex + 1} of ${filteredCards.length}` : 'No difficult cards marked yet'}</span>
+            {filteredCards.length > 0 && (
+              <div
+                className="flashcard-progress-track"
+                role="progressbar"
+                aria-label="Flashcard position"
+                aria-valuenow={cardIndex + 1}
+                aria-valuemin="1"
+                aria-valuemax={filteredCards.length}
+              >
+                <span style={{ width: `${((cardIndex + 1) / filteredCards.length) * 100}%` }} />
+              </div>
+            )}
+          </div>
           <label className="difficult-filter">
             <input
               type="checkbox"
@@ -539,17 +553,29 @@ function StudyTools({ activeTab }) {
         </div>
 
         {flashcard ? (
-          <article className={`tool-card flashcard ${showAnswer ? 'flashcard-revealed' : ''}`}>
-            <span className="flashcard-label">{showAnswer ? 'CONCEPT' : 'TRY TO REMEMBER'}</span>
-            <h3>{showAnswer ? flashcard.term : `What does “${flashcard.term}” mean?`}</h3>
-            {showAnswer ? (
-              <div className="flashcard-answer" aria-live="polite">
-                <p>{flashcard.definition}</p>
-                <p className="example-copy"><strong>Everyday example:</strong> {flashcard.example}</p>
-              </div>
-            ) : (
-              <button className="study-secondary-button" type="button" onClick={() => setShowAnswer(true)}>Reveal answer</button>
-            )}
+          <article className={`tool-card flashcard flashcard-accent-${cardIndex % 6} ${showAnswer ? 'flashcard-revealed' : ''}`}>
+            <button
+              className="flashcard-flip-button"
+              type="button"
+              aria-label={`${showAnswer ? 'Show question' : 'Reveal answer'} for ${flashcard.term}`}
+              aria-pressed={showAnswer}
+              onClick={() => setShowAnswer((isShowingAnswer) => !isShowingAnswer)}
+            >
+              <span className="flashcard-inner">
+                <span className="flashcard-face flashcard-front" aria-hidden={showAnswer}>
+                  <span className="flashcard-label">TRY TO REMEMBER</span>
+                  <span className="flashcard-term" role="heading" aria-level="3">What does “{flashcard.term}” mean?</span>
+                  <span className="flashcard-tap-hint">Tap to reveal answer <span aria-hidden="true">↻</span></span>
+                </span>
+                <span className="flashcard-face flashcard-back" aria-hidden={!showAnswer}>
+                  <span className="flashcard-label">CONCEPT</span>
+                  <span className="flashcard-term" role="heading" aria-level="3">{flashcard.term}</span>
+                  <span className="flashcard-definition">{flashcard.definition}</span>
+                  <span className="flashcard-example"><strong>Everyday example:</strong> {flashcard.example}</span>
+                  <span className="flashcard-tap-hint">Tap to see the question <span aria-hidden="true">↻</span></span>
+                </span>
+              </span>
+            </button>
             <div className="flashcard-actions">
               <button className="study-secondary-button" type="button" onClick={toggleDifficultCard}>
                 {difficultCardIds.includes(flashcard.id) ? 'Marked for more practice' : 'Mark as difficult'}
