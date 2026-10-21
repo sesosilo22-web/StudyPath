@@ -22,7 +22,7 @@ function getInitialStudyData() {
     scores: {},
     plan: null,
     notes: [IMPORTANT_AZ900_NOTE],
-    message: 'Scores and your plan are saved in this browser only.',
+    message: 'Scores, plans, and notes are saved in this browser only.',
   }
 
   try {
@@ -31,12 +31,17 @@ function getInitialStudyData() {
 
     const parsedData = JSON.parse(savedData)
     const notes = Array.isArray(parsedData?.notes)
-      ? parsedData.notes.filter((note) => (
-        typeof note?.id === 'string'
-        && typeof note.topicId === 'string'
-        && typeof note.title === 'string'
-        && typeof note.content === 'string'
-      ))
+      ? parsedData.notes
+        .filter((note) => (
+          typeof note?.id === 'string'
+          && typeof note.topicId === 'string'
+          && typeof note.title === 'string'
+          && typeof note.content === 'string'
+        ))
+        .map((note) => ({
+          ...note,
+          tags: Array.isArray(note.tags) ? note.tags.filter((tag) => typeof tag === 'string') : ['AZ-900'],
+        }))
       : []
     if (!notes.some((note) => note.id === IMPORTANT_AZ900_NOTE.id)) {
       notes.push(IMPORTANT_AZ900_NOTE)
@@ -159,16 +164,10 @@ function StudyTools({ activeTab }) {
   })
   const [savedPlan, setSavedPlan] = useState(initialData.plan)
   const [storageMessage, setStorageMessage] = useState(initialData.message)
-  const [sessionDraft, setSessionDraft] = useState({
-    title: '',
-    date: getLocalDateValue(),
-    durationMinutes: '30',
-  })
   const [noteDraft, setNoteDraft] = useState({ title: '', content: '' })
   const [selectedNoteTopicId, setSelectedNoteTopicId] = useState(az900Topics[0].id)
 
   const [quizTopic, setQuizTopic] = useState('all')
-  const [plannerPracticeTab, setPlannerPracticeTab] = useState('flashcards')
   const [quizStage, setQuizStage] = useState('ready')
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
@@ -188,7 +187,7 @@ function StudyTools({ activeTab }) {
         STORAGE_KEY,
         JSON.stringify({ scores: nextScores, plan: nextPlan, notes: nextNotes }),
       )
-      setStorageMessage('Scores and your plan are saved in this browser only.')
+      setStorageMessage('Scores, plans, and notes are saved in this browser only.')
     } catch {
       setStorageMessage('This browser could not save study data. Your current practice can continue, but may not persist.')
     }
@@ -198,14 +197,10 @@ function StudyTools({ activeTab }) {
     (question) => quizTopic === 'all' || question.topicId === quizTopic,
   )
   const question = questions[questionIndex]
-  const plannerCards = activeTab === 'planner' && plannerPracticeTab === 'flashcards'
-    ? flashcardDifficulty === 'all'
-      ? az900Flashcards
-      : az900Flashcards.filter((card) => card.difficulty === flashcardDifficulty)
-    : az900Flashcards
-  const filteredCards = showDifficultOnly
-    ? plannerCards.filter((card) => difficultCardIds.includes(card.id))
-    : plannerCards
+  const filteredCards = az900Flashcards.filter((card) => (
+    (flashcardDifficulty === 'all' || card.difficulty === flashcardDifficulty)
+    && (!showDifficultOnly || difficultCardIds.includes(card.id))
+  ))
   const flashcard = filteredCards[cardIndex]
   const today = getLocalDateValue()
   const plannedSessions = savedPlan?.sessions ?? []
@@ -214,11 +209,6 @@ function StudyTools({ activeTab }) {
   const sessionProgress = plannedSessions.length
     ? Math.round((completedSessionCount / plannedSessions.length) * 100)
     : 0
-
-  function updateSavedPlan(nextPlan) {
-    setSavedPlan(nextPlan)
-    saveStudyData(scores, nextPlan)
-  }
 
   function beginQuiz() {
     setQuestionIndex(0)
@@ -289,21 +279,6 @@ function StudyTools({ activeTab }) {
     saveStudyData(scores, plan)
   }
 
-  function addStudySession(event) {
-    event.preventDefault()
-    if (!savedPlan || !sessionDraft.title.trim()) return
-
-    const session = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      date: sessionDraft.date,
-      title: sessionDraft.title.trim(),
-      durationMinutes: Number(sessionDraft.durationMinutes),
-      completed: false,
-    }
-    updateSavedPlan({ ...savedPlan, sessions: [...plannedSessions, session] })
-    setSessionDraft({ ...sessionDraft, title: '' })
-  }
-
   function openTopicNotes(topicId) {
     setSelectedNoteTopicId(topicId)
     window.setTimeout(() => {
@@ -362,7 +337,7 @@ function StudyTools({ activeTab }) {
     ))
   }
 
-  if (activeTab === 'quiz') {
+  function renderQuizPanel() {
     return (
       <section className="study-tool-panel study-tool-quiz" aria-labelledby="quiz-title">
         <div className="tool-heading">
@@ -463,6 +438,8 @@ function StudyTools({ activeTab }) {
       </section>
     )
   }
+
+  if (activeTab === 'quiz') return renderQuizPanel()
 
   if (activeTab === 'readiness') {
     const totals = az900Topics.reduce((result, topic) => {
@@ -591,14 +568,25 @@ function StudyTools({ activeTab }) {
             <legend>Choose topics you want to strengthen</legend>
             <div className="topic-checkboxes">
               {az900Topics.map((topic) => (
-                <label className="topic-checkbox" key={topic.id}>
-                  <input
-                    type="checkbox"
-                    checked={plannerDraft.weakTopicIds.includes(topic.id)}
-                    onChange={() => toggleWeakTopic(topic.id)}
-                  />
-                  <span>{topic.label}</span>
-                </label>
+                <div className="planner-topic-choice" key={topic.id}>
+                  <label className="topic-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={plannerDraft.weakTopicIds.includes(topic.id)}
+                      onChange={() => toggleWeakTopic(topic.id)}
+                    />
+                    <span>{topic.label}</span>
+                  </label>
+                  <button
+                    className={`topic-notes-link${selectedNoteTopicId === topic.id ? ' selected' : ''}`}
+                    type="button"
+                    aria-label={`Open notes for ${topic.label}`}
+                    aria-pressed={selectedNoteTopicId === topic.id}
+                    onClick={() => openTopicNotes(topic.id)}
+                  >
+                    View notes <span aria-hidden="true">↘</span>
+                  </button>
+                </div>
               ))}
             </div>
           </fieldset>
@@ -631,14 +619,6 @@ function StudyTools({ activeTab }) {
                   .sort((first, second) => first.date.localeCompare(second.date))
                   .map((session) => (
                     <article className={`tool-card study-session${session.completed ? ' session-completed' : ''}`} key={session.id}>
-                      <label className="session-complete">
-                        <input
-                          type="checkbox"
-                          checked={session.completed}
-                          onChange={() => toggleSessionComplete(session.id)}
-                          aria-label={`Mark ${session.title} as ${session.completed ? 'incomplete' : 'complete'}`}
-                        />
-                      </label>
                       <div className="session-details">
                         <strong>{session.title}</strong>
                         <span>{new Date(`${session.date}T12:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })} · {session.durationMinutes} min</span>
@@ -651,12 +631,73 @@ function StudyTools({ activeTab }) {
             )}
           </div>
         )}
+        <section
+          className="planner-topic-notes"
+          id="planner-topic-notes"
+          aria-labelledby="planner-notes-title"
+          tabIndex="-1"
+        >
+          <div className="tool-heading">
+            <div>
+              <p className="eyebrow">YOUR AZ-900 LEARNING MATERIALS</p>
+              <h2 id="planner-notes-title">Topic notes</h2>
+              <p>Choose a topic above to view or add notes for that learning area.</p>
+            </div>
+          </div>
+          <div className="topic-notes-list">
+            <div className="planner-note-heading">
+              <div>
+                <p className="eyebrow">SELECTED LEARNING TOPIC</p>
+                <h3>{az900Topics.find((topic) => topic.id === selectedNoteTopicId)?.label}</h3>
+              </div>
+            </div>
+            {selectedTopicNotes.length ? (
+              selectedTopicNotes.map((note) => (
+                <article className="tool-card topic-note-card" key={note.id}>
+                  <div className="note-tags">{(note.tags ?? ['AZ-900']).map((tag) => <span key={tag}>{tag}</span>)}</div>
+                  <h4>{note.title}</h4>
+                  <p>{note.content}</p>
+                </article>
+              ))
+            ) : (
+              <p className="topic-notes-empty">
+                No notes have been added for this topic yet. Add your first note below.
+              </p>
+            )}
+          </div>
+          <form className="tool-card topic-note-form" onSubmit={saveTopicNote}>
+            <h3>Add a note for this topic</h3>
+            <label className="form-label" htmlFor="topic-note-title">
+              Note title
+              <input
+                id="topic-note-title"
+                type="text"
+                required
+                maxLength="120"
+                value={noteDraft.title}
+                onChange={(event) => setNoteDraft({ ...noteDraft, title: event.target.value })}
+              />
+            </label>
+            <label className="form-label" htmlFor="topic-note-content">
+              Note
+              <textarea
+                id="topic-note-content"
+                required
+                rows="4"
+                maxLength="2000"
+                value={noteDraft.content}
+                onChange={(event) => setNoteDraft({ ...noteDraft, content: event.target.value })}
+              />
+            </label>
+            <button className="study-primary-button" type="submit">Save topic note</button>
+          </form>
+        </section>
         <p className="storage-message" role="status">{storageMessage}</p>
       </section>
     )
   }
 
-  if (activeTab === 'flashcards') {
+  function renderFlashcardsPanel() {
     return (
       <section className="study-tool-panel study-tool-flashcards" aria-labelledby="flashcards-title">
         <div className="tool-heading">
@@ -667,8 +708,29 @@ function StudyTools({ activeTab }) {
           </div>
         </div>
         <div className="flashcard-controls">
+          <div className="flashcard-difficulty-filters" role="group" aria-label="Filter flashcards by difficulty">
+            {['all', 'easy', 'medium', 'hard'].map((difficulty) => (
+              <button
+                className={`difficulty-filter-button${flashcardDifficulty === difficulty ? ' selected' : ''}`}
+                type="button"
+                key={difficulty}
+                aria-pressed={flashcardDifficulty === difficulty}
+                onClick={() => {
+                  setFlashcardDifficulty(difficulty)
+                  setCardIndex(0)
+                  setShowAnswer(false)
+                }}
+              >
+                {difficulty === 'all' ? 'All' : difficulty[0].toUpperCase() + difficulty.slice(1)}
+              </button>
+            ))}
+          </div>
           <div className="flashcard-progress">
-            <span>{filteredCards.length ? `Card ${cardIndex + 1} of ${filteredCards.length}` : 'No difficult cards marked yet'}</span>
+            <span>{filteredCards.length
+              ? `Card ${cardIndex + 1} of ${filteredCards.length}`
+              : showDifficultOnly
+                ? 'No difficult cards marked yet'
+                : 'No cards in this difficulty'}</span>
             {filteredCards.length > 0 && (
               <div
                 className="flashcard-progress-track"
@@ -707,11 +769,13 @@ function StudyTools({ activeTab }) {
             >
               <span className="flashcard-inner">
                 <span className="flashcard-face flashcard-front" aria-hidden={showAnswer}>
+                  <span className={`flashcard-difficulty difficulty-${flashcard.difficulty}`}>{flashcard.difficulty}</span>
                   <span className="flashcard-label">TRY TO REMEMBER</span>
                   <span className="flashcard-term" role="heading" aria-level="3">What does “{flashcard.term}” mean?</span>
                   <span className="flashcard-tap-hint">Tap to reveal answer <span aria-hidden="true">↻</span></span>
                 </span>
                 <span className="flashcard-face flashcard-back" aria-hidden={!showAnswer}>
+                  <span className={`flashcard-difficulty difficulty-${flashcard.difficulty}`}>{flashcard.difficulty}</span>
                   <span className="flashcard-label">CONCEPT</span>
                   <span className="flashcard-term" role="heading" aria-level="3">{flashcard.term}</span>
                   <span className="flashcard-definition">{flashcard.definition}</span>
@@ -740,6 +804,8 @@ function StudyTools({ activeTab }) {
       </section>
     )
   }
+
+  if (activeTab === 'flashcards') return renderFlashcardsPanel()
 
   return null
 }
