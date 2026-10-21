@@ -2249,3 +2249,13 @@
   background: #7c5cfc;
   box-shadow: 0 0 0 3px #f0ecff;
 }
+
+/* Keep the sidebar component available in React, but remove it from the layout. */
+.sidebar {
+  display: none;
+}
+
+.main-content {
+  width: 100%;
+  margin-left: 0;
+}
