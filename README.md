@@ -4,8 +4,7 @@
 
 StudyPath is a browser-based learning companion for people preparing for Microsoft Azure Fundamentals (AZ-900). It combines a sample student dashboard with an AZ-900 learning path, a personalized study planner, original practice questions, revision flashcards, topic readiness estimates, and topic notes.
 
-The practice material is original and organized around the public [AZ-900 skills outline on Microsoft Learn](https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/az-900). It does not reproduce real or recalled exam questions and does not use Microsoft logos.
-
+The practice material is original and organized around the public[AZ-900 skills outline on Microsoft Learn](https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/)
 ## Features
 
 - **Dashboard:** Study overview, sample subject progress, and sample upcoming sessions. Dashboard statistics are illustrative sample data, not live learner records.
@@ -63,14 +62,6 @@ There is no dedicated automated test script in `package.json`. To manually check
 5. In **Review & Practice**, switch between **Flashcards** and **Practice Quiz**. Try a difficulty filter, reveal a card, and complete a quiz answer to see its feedback.
 6. Open **Readiness** and confirm the quiz score is reflected as topic practice accuracy.
 
-## What I learned
-
-- How React components and state can keep a dashboard, planner, quiz, and flashcards interactive.
-- How controlled forms and event handlers collect choices and update schedules.
-- How to save and restore browser-local data with `localStorage`, while explaining that it is not synced across devices.
-- How filtering, tabs, and conditional rendering can reuse quiz and flashcard behavior in more than one view.
-- How to make study controls clearer with responsive CSS, accessible labels, and keyboard-friendly buttons.
-- Why certification study content should be original, grounded in the public skills outline, and clearly labeled as unofficial.
 
 ## Current limitations
 
