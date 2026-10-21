@@ -138,8 +138,14 @@ function StudyTools({ activeTab }) {
   })
   const [savedPlan, setSavedPlan] = useState(initialData.plan)
   const [storageMessage, setStorageMessage] = useState(initialData.message)
+  const [sessionDraft, setSessionDraft] = useState({
+    title: '',
+    date: getLocalDateValue(),
+    durationMinutes: '30',
+  })
 
   const [quizTopic, setQuizTopic] = useState('all')
+  const [plannerPracticeTab, setPlannerPracticeTab] = useState('flashcards')
   const [quizStage, setQuizStage] = useState('ready')
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
@@ -149,6 +155,7 @@ function StudyTools({ activeTab }) {
 
   const [cardIndex, setCardIndex] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [flashcardDifficulty, setFlashcardDifficulty] = useState('all')
   const [difficultCardIds, setDifficultCardIds] = useState([])
   const [showDifficultOnly, setShowDifficultOnly] = useState(false)
 
@@ -168,9 +175,14 @@ function StudyTools({ activeTab }) {
     (question) => quizTopic === 'all' || question.topicId === quizTopic,
   )
   const question = questions[questionIndex]
-  const filteredCards = showDifficultOnly
-    ? az900Flashcards.filter((card) => difficultCardIds.includes(card.id))
+  const plannerCards = activeTab === 'planner' && plannerPracticeTab === 'flashcards'
+    ? flashcardDifficulty === 'all'
+      ? az900Flashcards
+      : az900Flashcards.filter((card) => card.difficulty === flashcardDifficulty)
     : az900Flashcards
+  const filteredCards = showDifficultOnly
+    ? plannerCards.filter((card) => difficultCardIds.includes(card.id))
+    : plannerCards
   const flashcard = filteredCards[cardIndex]
   const today = getLocalDateValue()
   const plannedSessions = savedPlan?.sessions ?? []
@@ -251,6 +263,21 @@ function StudyTools({ activeTab }) {
     setSavedPlan(plan)
     setPlannerDraft(plan)
     saveStudyData(scores, plan)
+  }
+
+  function addStudySession(event) {
+    event.preventDefault()
+    if (!savedPlan || !sessionDraft.title.trim()) return
+
+    const session = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      date: sessionDraft.date,
+      title: sessionDraft.title.trim(),
+      durationMinutes: Number(sessionDraft.durationMinutes),
+      completed: false,
+    }
+    updateSavedPlan({ ...savedPlan, sessions: [...plannedSessions, session] })
+    setSessionDraft({ ...sessionDraft, title: '' })
   }
 
   function toggleSessionComplete(sessionId) {
