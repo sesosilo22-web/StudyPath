@@ -9,7 +9,7 @@ The practice material is original and organized around the public[AZ-900 skills 
 
 - **Dashboard:** Study overview, sample subject progress, and sample upcoming sessions. Dashboard statistics are illustrative sample data, not live learner records.
 - **AZ-900 learning path:** Overview of the three AZ-900 skill areas.
-- **Personal study planner:** Create a schedule from an exam date, available daily study hours, and selected focus topics. The generated schedule covers up to the next seven days and includes review and practice blocks. Learners can also add individual study sessions.
+- **Personal study planner:** Create a schedule from an exam date, available daily study hours, and selected focus topics. The generated schedule covers up to the next seven days and includes review and practice blocks. 
 - **Flashcards:** An AZ-900 study-tool view with eight concept cards, answer reveal, previous/next navigation, and Easy, Medium, Hard, and All filters. Learners can also mark cards for extra practice during the current app session.
 - **Practice quiz:** A separate AZ-900 study-tool view with six original multiple-choice questions across the three skill areas. Answers provide immediate feedback, explanations, and an everyday example. Quiz results contribute to topic scores.
 - **Readiness tracker:** Shows practice accuracy by topic and highlights areas to revisit. Readiness is only an estimate; it is not a prediction or guarantee of an exam result.
