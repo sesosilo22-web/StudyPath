@@ -8,11 +8,20 @@ import {
 import './Az900Study.css'
 
 const STORAGE_KEY = 'studypath-az900-study-v1'
+const IMPORTANT_AZ900_NOTE = {
+  id: 'important-az900-content-branding-rules',
+  topicId: 'az900',
+  title: 'Important: AZ-900 Content and Branding Rules',
+  content: 'Do not copy real Microsoft certification exam questions or use Microsoft logos. Base your learning content on the public AZ-900 skills outline on Microsoft Learn and write original practice questions. Clearly label StudyPath as an unofficial educational tool that is not affiliated with or endorsed by Microsoft.',
+  tags: ['AZ-900', 'Important'],
+  referenceUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/',
+}
 
 function getInitialStudyData() {
   const emptyData = {
     scores: {},
     plan: null,
+    notes: [IMPORTANT_AZ900_NOTE],
     message: 'Scores and your plan are saved in this browser only.',
   }
 
@@ -21,6 +30,17 @@ function getInitialStudyData() {
     if (!savedData) return emptyData
 
     const parsedData = JSON.parse(savedData)
+    const notes = Array.isArray(parsedData?.notes)
+      ? parsedData.notes.filter((note) => (
+        typeof note?.id === 'string'
+        && typeof note.topicId === 'string'
+        && typeof note.title === 'string'
+        && typeof note.content === 'string'
+      ))
+      : []
+    if (!notes.some((note) => note.id === IMPORTANT_AZ900_NOTE.id)) {
+      notes.push(IMPORTANT_AZ900_NOTE)
+    }
     const scores = {}
     az900Topics.forEach((topic) => {
       const score = parsedData?.scores?.[topic.id]
@@ -60,7 +80,7 @@ function getInitialStudyData() {
       plan = { ...planDetails, sessions: savedSessions }
     }
 
-    return { scores, plan, message: emptyData.message }
+    return { scores, plan, notes, message: emptyData.message }
   } catch {
     return {
       ...emptyData,
@@ -131,6 +151,7 @@ function createStudySessions(plan) {
 function StudyTools({ activeTab }) {
   const [initialData] = useState(getInitialStudyData)
   const [scores, setScores] = useState(initialData.scores)
+  const [notes, setNotes] = useState(initialData.notes)
   const [plannerDraft, setPlannerDraft] = useState({
     examDate: initialData.plan?.examDate ?? '',
     hoursPerDay: initialData.plan?.hoursPerDay ?? '1',
@@ -143,6 +164,8 @@ function StudyTools({ activeTab }) {
     date: getLocalDateValue(),
     durationMinutes: '30',
   })
+  const [noteDraft, setNoteDraft] = useState({ title: '', content: '' })
+  const [selectedNoteTopicId, setSelectedNoteTopicId] = useState(az900Topics[0].id)
 
   const [quizTopic, setQuizTopic] = useState('all')
   const [plannerPracticeTab, setPlannerPracticeTab] = useState('flashcards')
@@ -159,11 +182,11 @@ function StudyTools({ activeTab }) {
   const [difficultCardIds, setDifficultCardIds] = useState([])
   const [showDifficultOnly, setShowDifficultOnly] = useState(false)
 
-  function saveStudyData(nextScores, nextPlan) {
+  function saveStudyData(nextScores, nextPlan, nextNotes = notes) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ scores: nextScores, plan: nextPlan }),
+        JSON.stringify({ scores: nextScores, plan: nextPlan, notes: nextNotes }),
       )
       setStorageMessage('Scores and your plan are saved in this browser only.')
     } catch {
@@ -186,6 +209,7 @@ function StudyTools({ activeTab }) {
   const flashcard = filteredCards[cardIndex]
   const today = getLocalDateValue()
   const plannedSessions = savedPlan?.sessions ?? []
+  const selectedTopicNotes = notes.filter((note) => note.topicId === selectedNoteTopicId)
   const completedSessionCount = plannedSessions.filter((session) => session.completed).length
   const sessionProgress = plannedSessions.length
     ? Math.round((completedSessionCount / plannedSessions.length) * 100)
@@ -280,14 +304,33 @@ function StudyTools({ activeTab }) {
     setSessionDraft({ ...sessionDraft, title: '' })
   }
 
-  function toggleSessionComplete(sessionId) {
-    if (!savedPlan) return
-    const sessions = plannedSessions.map((session) => (
-      session.id === sessionId
-        ? { ...session, completed: !session.completed }
-        : session
-    ))
-    updateSavedPlan({ ...savedPlan, sessions })
+  function openTopicNotes(topicId) {
+    setSelectedNoteTopicId(topicId)
+    window.setTimeout(() => {
+      document.getElementById('planner-topic-notes')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+  }
+
+  function saveTopicNote(event) {
+    event.preventDefault()
+    const title = noteDraft.title.trim()
+    const content = noteDraft.content.trim()
+    if (!title || !content) return
+
+    const nextNotes = [
+      ...notes,
+      {
+        id: `topic-note-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        topicId: selectedNoteTopicId,
+        title,
+        content,
+        tags: ['AZ-900'],
+        referenceUrl: '',
+      },
+    ]
+    setNotes(nextNotes)
+    saveStudyData(scores, savedPlan, nextNotes)
+    setNoteDraft({ title: '', content: '' })
   }
 
   function toggleWeakTopic(topicId) {
